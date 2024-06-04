@@ -25,9 +25,27 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 
+//middlewares
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) {
+        return res.status(401).send({ message: "Unauthorized User" })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            console.log(err)
+            return res.status(401).send({ message: "Unauthorized Access" })
+        }
+        req.user = decoded;
+
+        next()
+    })
+}
+
+
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://mealLounge:.codeworld101.@cluster0.iduz7rm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.iduz7rm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
