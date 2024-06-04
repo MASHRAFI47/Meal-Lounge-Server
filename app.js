@@ -59,6 +59,27 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
 
+        const usersCollection = client.db("mealLounge").collection("users")
+
+        app.put('/user', async (req, res) => {
+            const user = req.body;
+            const query = { email: user?.email }
+
+            const isExisted = await usersCollection.findOne(query);
+            if (isExisted) {
+                return res.send(isExisted)
+            }
+
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    ...user,
+                    timestamp: Date.now()
+                }
+            }
+            const result = await usersCollection.updateOne(query, updateDoc, options)
+            res.send(result)
+        })
 
 
         app.post('/jwt', async (req, res) => {
