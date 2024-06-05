@@ -61,9 +61,18 @@ async function run() {
 
         const usersCollection = client.db("mealLounge").collection("users")
 
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result)
+        })
+
         app.put('/user', async (req, res) => {
             const user = req.body;
             const query = { email: user?.email }
+
+            if (user?.email == null) {
+                return;
+            }
 
             const isExisted = await usersCollection.findOne(query);
             if (isExisted) {
@@ -82,6 +91,17 @@ async function run() {
         })
 
 
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await usersCollection.findOne(query);
+            res.send(result)
+        })
+
+
+
+
+        //jwt
         app.post('/jwt', async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -115,7 +135,7 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
-        await client.close();
+        // await client.close();
     }
 }
 run().catch(console.dir);
