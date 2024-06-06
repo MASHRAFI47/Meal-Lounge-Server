@@ -60,6 +60,7 @@ async function run() {
     try {
 
         const usersCollection = client.db("mealLounge").collection("users")
+        const mealsCollection = client.db("mealLounge").collection("meals")
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -97,6 +98,14 @@ async function run() {
             const result = await usersCollection.findOne(query);
             res.send(result)
         })
+
+        //get all meals
+        app.get('/meals', async(req, res) => {
+            const result = await mealsCollection.find().toArray();
+            res.send(result);
+        })
+
+        
 
 
 
