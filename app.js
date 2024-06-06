@@ -105,7 +105,12 @@ async function run() {
             res.send(result);
         })
 
-        
+        //add a meal
+        app.post('/meals', async(req, res) => {
+            const meal = req.body;
+            const result = await mealsCollection.insertOne(meal);
+            res.send(result)
+        })
 
 
 
