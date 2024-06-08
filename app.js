@@ -61,6 +61,7 @@ async function run() {
 
         const usersCollection = client.db("mealLounge").collection("users")
         const mealsCollection = client.db("mealLounge").collection("meals")
+        const membershipsCollection = client.db("mealLounge").collection("memberships")
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -117,6 +118,14 @@ async function run() {
         app.post('/meals', async (req, res) => {
             const meal = req.body;
             const result = await mealsCollection.insertOne(meal);
+            res.send(result)
+        })
+
+
+
+        //memberships
+        app.get('/memberships', async (req, res) => {
+            const result = await membershipsCollection.find().toArray();
             res.send(result)
         })
 
