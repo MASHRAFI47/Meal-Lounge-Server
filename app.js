@@ -129,6 +129,13 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/membership/:package', async (req, res) => {
+            const package = req.params.package;
+            const query = { packageName: package };
+            const result = await membershipsCollection.findOne(query);
+            res.send(result)
+        })
+
 
 
 
