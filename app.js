@@ -44,7 +44,7 @@ const verifyToken = (req, res, next) => {
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.iduz7rm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -100,13 +100,21 @@ async function run() {
         })
 
         //get all meals
-        app.get('/meals', async(req, res) => {
+        app.get('/meals', async (req, res) => {
             const result = await mealsCollection.find().toArray();
             res.send(result);
         })
 
+        //get a meal
+        app.get('/meal/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await mealsCollection.findOne(query);
+            res.send(result)
+        })
+
         //add a meal
-        app.post('/meals', async(req, res) => {
+        app.post('/meals', async (req, res) => {
             const meal = req.body;
             const result = await mealsCollection.insertOne(meal);
             res.send(result)
