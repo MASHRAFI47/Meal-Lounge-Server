@@ -25,6 +25,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+
 //middlewares
 const verifyToken = (req, res, next) => {
     const token = req.cookies?.token;
@@ -122,7 +125,6 @@ async function run() {
         })
 
 
-
         //memberships
         app.get('/memberships', async (req, res) => {
             const result = await membershipsCollection.find().toArray();
@@ -135,6 +137,30 @@ async function run() {
             const result = await membershipsCollection.findOne(query);
             res.send(result)
         })
+
+
+        //payment integration
+        app.post("/create-payment-intent", async (req, res) => {
+            const price = req.body.price;
+            const priceInCent = parseFloat(price) * 100
+
+            if(!price || priceInCent < 1) return
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: priceInCent,
+                currency: "usd",
+                // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
 
 
 
