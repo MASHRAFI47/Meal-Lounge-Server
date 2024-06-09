@@ -167,6 +167,21 @@ async function run() {
         })
 
 
+        //update like
+        app.patch('/like-meal/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const meals = req.body;
+            const updateDoc = {
+                $set: {
+                    likes: parseInt(meals.likes) + 1
+                }
+            }
+            const result = await mealsCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
+
+
         //requested meal
         app.post('/requested', async (req, res) => {
             const meal = req.body;
@@ -189,6 +204,8 @@ async function run() {
             res.send(result)
         })
 
+
+        //make delivered
         app.patch('/requested/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -209,12 +226,22 @@ async function run() {
             res.send(result)
         })
 
+
+        //package
         app.get('/membership/:package', async (req, res) => {
             const package = req.params.package;
             const query = { packageName: package };
             const result = await membershipsCollection.findOne(query);
             res.send(result)
         })
+
+
+        //get all upcoming meals
+        app.get('/upcoming', async (req, res) => {
+            const result = await upcomingMealsCollection.find().toArray();
+            res.send(result)
+        })
+
 
 
         //payment integration
