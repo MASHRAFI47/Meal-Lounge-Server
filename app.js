@@ -74,6 +74,7 @@ async function run() {
 
         app.put('/user', async (req, res) => {
             const user = req.body;
+            console.log(user)
             const query = { email: user?.email }
 
             if (user?.email == null) {
@@ -94,6 +95,20 @@ async function run() {
             }
             const result = await usersCollection.updateOne(query, updateDoc, options)
             res.send(result)
+        })
+
+        //update a user
+        app.patch('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const userData = req.body;
+            console.log(userData)
+            const updateDoc = {
+                $set: {
+                    ...userData
+                }
+            }
+            const result = await usersCollection.updateOne(query, updateDoc)
         })
 
 
@@ -130,6 +145,20 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await mealsCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        //update a meal
+        app.put('/meal/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const meal = req.body
+            const updateDoc = {
+                $set: {
+                    ...meal
+                }
+            }
+            const result = await mealsCollection.updateOne(query, updateDoc)
             res.send(result)
         })
 
