@@ -67,6 +67,7 @@ async function run() {
         const membershipsCollection = client.db("mealLounge").collection("memberships")
         const subscribersCollection = client.db("mealLounge").collection("subscribers")
         const requestedCollection = client.db("mealLounge").collection("requested")
+        const upcomingMealsCollection = client.db("mealLounge").collection("upcoming")
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -75,7 +76,6 @@ async function run() {
 
         app.put('/user', async (req, res) => {
             const user = req.body;
-            console.log(user)
             const query = { email: user?.email }
 
             if (user?.email == null) {
@@ -112,6 +112,7 @@ async function run() {
                 }
             }
             const result = await usersCollection.updateOne(query, updateDoc)
+            res.send(result)
         })
 
 
@@ -169,7 +170,6 @@ async function run() {
         //requested meal
         app.post('/requested', async (req, res) => {
             const meal = req.body;
-            console.log(meal)
             const result = await requestedCollection.insertOne(meal);
             res.send(result)
         })
@@ -186,6 +186,19 @@ async function run() {
             const stat = req.params.stat;
             const query = { status: stat }
             const result = await requestedCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.patch('/requested/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const meal = req.body;
+            const updateDoc = {
+                $set: {
+                    ...meal,
+                }
+            }
+            const result = await requestedCollection.updateOne(query, updateDoc)
             res.send(result)
         })
 
