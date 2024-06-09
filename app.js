@@ -66,6 +66,7 @@ async function run() {
         const mealsCollection = client.db("mealLounge").collection("meals")
         const membershipsCollection = client.db("mealLounge").collection("memberships")
         const subscribersCollection = client.db("mealLounge").collection("subscribers")
+        const requestedCollection = client.db("mealLounge").collection("requested")
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -79,6 +80,9 @@ async function run() {
 
             if (user?.email == null) {
                 return;
+            }
+            if (user?.name == null) {
+                return
             }
 
             const isExisted = await usersCollection.findOne(query);
@@ -102,7 +106,6 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const userData = req.body;
-            console.log(userData)
             const updateDoc = {
                 $set: {
                     ...userData
@@ -163,6 +166,30 @@ async function run() {
         })
 
 
+        //requested meal
+        app.post('/requested', async (req, res) => {
+            const meal = req.body;
+            console.log(meal)
+            const result = await requestedCollection.insertOne(meal);
+            res.send(result)
+        })
+
+        //get all req meals
+        app.get('/requests', async (req, res) => {
+            const result = await requestedCollection.find().toArray();
+            res.send(result)
+        })
+
+
+        //get requested meals
+        app.get('/requests/:stat', async (req, res) => {
+            const stat = req.params.stat;
+            const query = { status: stat }
+            const result = await requestedCollection.find(query).toArray()
+            res.send(result)
+        })
+
+
         //memberships
         app.get('/memberships', async (req, res) => {
             const result = await membershipsCollection.find().toArray();
@@ -206,7 +233,6 @@ async function run() {
             const result = await subscribersCollection.insertOne(subscriber);
             res.send(result)
         })
-
 
 
 
