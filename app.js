@@ -183,8 +183,14 @@ async function run() {
         })
 
 
+        app.get('/like-meal/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await mealsCollection.findOne(query);
+            res.send(result)
+        })
         //update like
-        app.patch('/like-meal/:id', verifyToken, async (req, res) => {
+        app.patch('/like-meal/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const meals = req.body;
