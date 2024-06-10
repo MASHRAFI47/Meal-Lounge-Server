@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 
 const corsOptions = {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'https://meal-lounge.web.app'],
     credentials: true,
     optionsSuccessStatus: 200
 }
@@ -68,8 +68,24 @@ async function run() {
         const subscribersCollection = client.db("mealLounge").collection("subscribers")
         const requestedCollection = client.db("mealLounge").collection("requested")
         const upcomingMealsCollection = client.db("mealLounge").collection("upcoming")
+        const likesCollection = client.db("mealLounge").collection("likes")
+        const reviewsCollection = client.db("mealLounge").collection("reviews")
 
-        app.get('/users', async (req, res) => {
+
+        //verify admin middleware
+        const verifyAdmin = async (req, res, next) => {
+            const user = req.user;
+            const query = { email: user?.email };
+            const result = await usersCollection.findOne(query)
+            if (!result || result?.role !== 'admin') {
+                return res.status(401).send({ message: "Unauthorized Access" })
+            }
+
+            next();
+        }
+
+
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result)
         })
@@ -102,7 +118,7 @@ async function run() {
         })
 
         //update a user
-        app.patch('/users/:id', async (req, res) => {
+        app.patch('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const userData = req.body;
@@ -138,14 +154,14 @@ async function run() {
         })
 
         //add a meal
-        app.post('/meals', async (req, res) => {
+        app.post('/meals', verifyToken, verifyAdmin, async (req, res) => {
             const meal = req.body;
             const result = await mealsCollection.insertOne(meal);
             res.send(result)
         })
 
         //delete a meal
-        app.delete('/meal/:id', async (req, res) => {
+        app.delete('/meal/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await mealsCollection.deleteOne(query);
@@ -153,7 +169,7 @@ async function run() {
         })
 
         //update a meal
-        app.put('/meal/:id', async (req, res) => {
+        app.put('/meal/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const meal = req.body
@@ -168,7 +184,7 @@ async function run() {
 
 
         //update like
-        app.patch('/like-meal/:id', async (req, res) => {
+        app.patch('/like-meal/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const meals = req.body;
@@ -183,7 +199,7 @@ async function run() {
 
 
         //requested meal
-        app.post('/requested', async (req, res) => {
+        app.post('/requested', verifyToken, async (req, res) => {
             const meal = req.body;
             const result = await requestedCollection.insertOne(meal);
             res.send(result)
@@ -192,6 +208,14 @@ async function run() {
         //get all req meals
         app.get('/requests', async (req, res) => {
             const result = await requestedCollection.find().toArray();
+            res.send(result)
+        })
+
+        //delete requested meal
+        app.delete('/requested/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await requestedCollection.deleteOne(query);
             res.send(result)
         })
 
@@ -243,9 +267,34 @@ async function run() {
         })
 
 
+        //likes collection and stop double like by one user
+        app.post('/likes/:email', async (req, res) => {
+            const { param1, param2, param3 } = req.body;
+            //param1:
+            //param2: food title
+            //param3: destructured meal data
+
+            // if(param3.title == param2 && param3.email == email) {
+            //     return
+            // }
+            const email = req.params.email;
+            if (param3.email !== email && !param2) {
+                return
+            }
+            const result = await likesCollection.insertOne(param3);
+            res.send(result)
+        })
+
+        //get all likes
+        app.get('/likes', async (req, res) => {
+            const result = await likesCollection.find().toArray();
+            res.send(result)
+        })
+
+
 
         //payment integration
-        app.post("/create-payment-intent", async (req, res) => {
+        app.post("/create-payment-intent", verifyToken, async (req, res) => {
             const price = req.body.price;
             const priceInCent = parseFloat(price) * 100
 
@@ -271,6 +320,50 @@ async function run() {
         app.post('/subscribers', async (req, res) => {
             const subscriber = req.body;
             const result = await subscribersCollection.insertOne(subscriber);
+            res.send(result)
+        })
+
+
+        //get all reviews
+        app.get('/reviews', verifyToken, async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.get('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await reviewsCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        //post in reviews
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review);
+            res.send(result)
+        })
+
+        //update a review
+        app.patch('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const review = req.body;
+            console.log(review)
+            const updateDoc = {
+                $set: {
+                    ...review
+                }
+            }
+            const result = await reviewsCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
+
+        //delete a review
+        app.delete('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await reviewsCollection.deleteOne(query)
             res.send(result)
         })
 
@@ -305,9 +398,9 @@ async function run() {
 
 
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
