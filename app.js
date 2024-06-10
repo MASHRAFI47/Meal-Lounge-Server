@@ -85,7 +85,7 @@ async function run() {
         }
 
 
-        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result)
         })
@@ -118,7 +118,7 @@ async function run() {
         })
 
         //update a user
-        app.patch('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+        app.patch('/users/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const userData = req.body;
@@ -154,7 +154,7 @@ async function run() {
         })
 
         //add a meal
-        app.post('/meals', verifyToken, verifyAdmin, async (req, res) => {
+        app.post('/meals', verifyToken, async (req, res) => {
             const meal = req.body;
             const result = await mealsCollection.insertOne(meal);
             res.send(result)
